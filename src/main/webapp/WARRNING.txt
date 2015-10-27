@@ -1,0 +1,1 @@
+1.检查maven依赖的数量和版本，一定要copy到tomcat的lib目录中
