@@ -6,8 +6,10 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -52,6 +54,30 @@ public class HibernateBaseDaoImpl<T, PK extends Serializable> implements Hiberna
 	public Session getSession() {
 		// 事务必须是开启的（required）,否则获取不到
 		return sessionFactory.getCurrentSession();
+	}
+
+	/**
+	 * 1、getCurrentSession()与openSession()的区别？<br>
+	 * 采用getCurrentSession()创建的session会绑定到当前线程中，而采用openSession() 创建的session则不会<br>
+	 * 采用getCurrentSession()创建的session在commit或rollback时会自动关闭，而采用openSession()<br>
+	 * 创建的session必须手动关闭 ,调用session.flush();session.close()<br>
+	 * 
+	 * 2、使用getCurrentSession()需要在hibernate.cfg.xml文件中加入如下配置：<br>
+	 * 如果使用的是本地事务（jdbc事务）<br>
+	 * <property
+	 * name="hibernate.current_session_context_class">thread</property><br>
+	 * 如果使用的是全局事务（jta事务）<br>
+	 * <property name="hibernate.current_session_context_class">jta</property>
+	 * 利于ThreadLocal模式管理Session
+	 * 
+	 * @param isCurrrentSession
+	 * @return
+	 */
+	public Session getSession(boolean isNewSession) {
+		if (isNewSession)
+			return sessionFactory.openSession();
+		else
+			return sessionFactory.getCurrentSession();
 	}
 
 	@Override
@@ -133,12 +159,12 @@ public class HibernateBaseDaoImpl<T, PK extends Serializable> implements Hiberna
 	 */
 	@Override
 	public T load(PK id) {
-		return (T)getSession().load(this.entityClass, id);
+		return (T) getSession().load(this.entityClass, id);
 	}
 
 	@Override
 	public T get(PK id) {
-		return (T)getSession().get(this.entityClass, id);
+		return (T) getSession().get(this.entityClass, id);
 	}
 
 	@Override
@@ -150,6 +176,25 @@ public class HibernateBaseDaoImpl<T, PK extends Serializable> implements Hiberna
 	@Override
 	public long count(Criteria criteria) {
 		return Integer.valueOf(criteria.setProjection(Projections.rowCount()).uniqueResult().toString());
+	}
+
+	/**
+	 * 使用sql,hql查询结果条数
+	 */
+	@Override
+	public long count(boolean isByHql, String hqlOrHql, Map<String, String> parameters) {
+		Query query;
+		if (isByHql)
+			query = getSession().createQuery(hqlOrHql);
+		else
+			query = getSession().createSQLQuery(hqlOrHql);
+		if (parameters != null) {
+			for (Map.Entry<String, String> param : parameters.entrySet()) {
+				query.setString(param.getKey(), param.getValue());
+			}
+		}
+		query.setFirstResult(0);
+		return (long) query.uniqueResult();
 	}
 
 	@Override
@@ -272,20 +317,21 @@ public class HibernateBaseDaoImpl<T, PK extends Serializable> implements Hiberna
 	 * 支持Criteria查询的分页方法
 	 */
 	@Override
-	public Page<T> pagedQuery(Criteria criteria, int pageNo, int pageSize) {
+	public Page pagedQuery(Criteria criteria, int pageNo, int pageSize) {
 		Assert.isTrue(pageNo >= 1, "pageNo should starts from 1");
 		List<T> list = findPage(criteria, pageNo, pageSize);
-		// 注：因为finaPage方法改变了查询条件导致countALL方法查询为空， 所以必须重新设置setFirstResult为0
+		// 注：因为finaPage方法改变了查询条件导致count方法查询为空， 所以必须重新设置setFirstResult为0
 		criteria.setFirstResult(0);
 		// 获得查询总数
 		long totalCount = count(criteria);
-		// 查询不到记录
+		// 查询不到记录,返回具有默认值的page对象
 		if (totalCount < 1) {
-			return new Page<T>();
+			return new Page();
 		}
 		// 实际查询返回分页对象
-		int startIndex = Page.getStartOfPage(pageNo, pageSize);
-		return new Page<T>(startIndex, totalCount, pageSize, list);
+		// 计算起始行号
+		int startIndex = (pageNo - 1) * pageSize;
+		return new Page(startIndex, totalCount, pageSize, list);
 	}
 
 	/**
@@ -373,6 +419,49 @@ public class HibernateBaseDaoImpl<T, PK extends Serializable> implements Hiberna
 	@Override
 	public List<?> queryBySql(String sql, Object parameters) {
 		return getSession().createSQLQuery(sql).setProperties(parameters).list();
+	}
+
+	/**
+	 * 使用hql或sql分页查询
+	 */
+	@Override
+	public List<?> findPage(boolean isByHql, String hqlOrSql, Page page) {
+		if (page.getPageNo() < 1) {
+			LOG.info("The page parameter is:" + page.toString());
+			LOG.warn("The page number must gentle than 0");
+			return null;
+		}
+		Query query;
+		if (isByHql)
+			query = getSession().createQuery(hqlOrSql);
+		else
+			query = getSession().createSQLQuery(hqlOrSql);
+		if (page.getKeywords() != null) {
+			for (Map.Entry<String, String> param : page.getKeywords().entrySet()) {
+				query.setString(param.getKey(), param.getValue());
+			}
+		}
+		query.setFirstResult((page.getPageNo() - 1) * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+		return query.list();
+	}
+
+	/**
+	 * 条件分页并封装成page对象
+	 */
+	@Override
+	public Page pagedQuery(boolean isByHql, String hqlOrSql, String countSql, Page page) {
+		List<?> data = findPage(isByHql, hqlOrSql, page);
+		System.out.println("data:"+data);
+		// 获得查询总数
+		long totalCount = count(isByHql, countSql, page.getKeywords());
+		// 查询不到记录,返回具有默认值的page对象
+		if (totalCount < 1)
+			return new Page();
+		// 实际查询返回分页对象
+		// 计算起始行号
+		int startIndex = (page.getPageNo() - 1) * page.getPageSize();
+		return new Page(startIndex, totalCount, page.getPageSize(), data);
 	}
 
 }

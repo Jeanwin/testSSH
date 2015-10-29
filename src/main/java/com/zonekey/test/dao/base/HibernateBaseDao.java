@@ -2,6 +2,7 @@ package com.zonekey.test.dao.base;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Criterion;
@@ -126,6 +127,16 @@ public interface HibernateBaseDao<T, PK extends java.io.Serializable> {
 	 * @return
 	 */
 	public long count(Criteria criteria);
+
+	/**
+	 * 统计hql或sql查询记录数
+	 * 
+	 * @param iByHql
+	 * @param hql
+	 * @param parameters
+	 * @return
+	 */
+	public long count(boolean iByHql, String hqlOrHql, Map<String, String> parameters);
 
 	/**
 	 * 获取全部对象
@@ -253,11 +264,34 @@ public interface HibernateBaseDao<T, PK extends java.io.Serializable> {
 	public List<T> findPage(Criteria criteria, int pageNo, int pageSize);
 
 	/**
+	 * 条件分页查询
+	 * 
+	 * @param isByHql
+	 *            取值true时使用hql查询,取值为false时使用sql查询
+	 * @param hqlOrSql
+	 *            hql或sql查询语句
+	 * @param page
+	 *            分页参数，前台需指定pageNo,pageSize,keywords
+	 * @return
+	 */
+	public List<?> findPage(boolean isByHql, String hqlOrSql, Page page);
+
+	/**
 	 * 条件分页,通过Criteria可以设置各种查询条件 Criterion是Criteria的查询条件
 	 * 
 	 * @return
 	 */
-	public Page<T> pagedQuery(Criteria criteria, int pageNo, int pageSize);
+	public Page pagedQuery(Criteria criteria, int pageNo, int pageSize);
+
+	/**
+	 * 使用hql或者sql分页
+	 * 
+	 * @param isByHql
+	 * @param hqlOrSql
+	 * @param page
+	 * @return
+	 */
+	public Page pagedQuery(boolean isByHql, String hqlOrSql, String countSql, Page page);
 
 	/**
 	 * 使用HQL增删改
@@ -306,16 +340,18 @@ public interface HibernateBaseDao<T, PK extends java.io.Serializable> {
 	 * @return
 	 */
 	public void executeBySql(String sql, Object parameters);
-   
+
 	/**
 	 * 使用原始sql查询
+	 * 
 	 * @param sql
 	 * @return
 	 */
 	public List<?> queryBySql(String sql);
-    
+
 	/**
 	 * 使用原始sql查询
+	 * 
 	 * @param sql
 	 * @param parameters
 	 * @return

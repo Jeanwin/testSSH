@@ -38,6 +38,14 @@ public class Book implements java.io.Serializable {
 		this.description = description;
 	}
 
+	public Book(String name, String description, String author, float prise) {
+		super();
+		this.name = name;
+		this.description = description;
+		this.author = author;
+		this.prise = prise;
+	}
+
 	// Property accessors
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
@@ -67,9 +75,10 @@ public class Book implements java.io.Serializable {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-    
+
 	/**
 	 * 不映射字段
+	 * 
 	 * @return
 	 */
 	@Transient
@@ -80,7 +89,7 @@ public class Book implements java.io.Serializable {
 	public void setAuthor(String author) {
 		this.author = author;
 	}
-    
+
 	@Transient
 	public float getPrise() {
 		return prise;

@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 分页查询返回数据 前台传递参数时只传递startIndex,pageSize
+ * 分页查询返回数据 前台传递参数时只传递pageNo,pageSize
  * 
  * @author admin
  * 
  * @param <T>
  */
-public class Page<T> {
-	// 起始行号，*
+public class Page {
+	// 起始行号，
 	private int startIndex;
 	// 总的记录数
 	private long totalCount;
@@ -19,7 +19,7 @@ public class Page<T> {
 	private int pageSize;
 	// 总的页数
 	private int pageCount;
-	// 当前页号
+	// 当前页号，*
 	private int pageNo;
 	// 显示多少个页号
 	private int pageNums = 10;
@@ -28,11 +28,33 @@ public class Page<T> {
 	// 结束页号
 	private int endOfPage;
 	// 数据集
-	private List<T> data;
+	private List<?> data;
 	// 查询关键字
 	private Map<String, String> keywords;
 
-	public Page(int startIndex, long totalCount, int pageSize, List<T> list) {
+	/**
+	 * 传参时创建
+	 * 
+	 * @param pageNo
+	 * @param pageSize
+	 * @param keywords
+	 */
+	public Page(int pageNo, int pageSize, Map<String, String> keywords) {
+		this.pageNo = pageNo;
+		this.pageSize = pageSize;
+		this.keywords = keywords;
+		this.startIndex = (pageNo - 1) * pageSize;
+	}
+
+	/**
+	 * 封装数据时创建
+	 * 
+	 * @param startIndex
+	 * @param totalCount
+	 * @param pageSize
+	 * @param list
+	 */
+	public Page(int startIndex, long totalCount, int pageSize, List<?> list) {
 		// 分页时传参
 		this.startIndex = startIndex;
 		this.pageSize = pageSize;
@@ -89,7 +111,7 @@ public class Page<T> {
 	 * @param pageCount
 	 */
 	public void setPageCount() {
-		this.pageCount = (int) (totalCount % pageSize == 0 ? totalCount % pageSize : totalCount % pageSize + 1);
+		this.pageCount = (int) (totalCount % pageSize == 0 ? totalCount / pageSize : totalCount / pageSize + 1);
 	}
 
 	public int getPageNo() {
@@ -103,10 +125,6 @@ public class Page<T> {
 	 */
 	public void setPageNo() {
 		this.pageNo = startIndex % pageSize + 1;
-	}
-
-	public static int getStartOfPage(int pageNo, int pageSize) {
-		return 0;
 	}
 
 	public int getStartOfPage() {
@@ -155,11 +173,11 @@ public class Page<T> {
 		}
 	}
 
-	public List<T> getData() {
+	public List<?> getData() {
 		return data;
 	}
 
-	public void setData(List<T> data) {
+	public void setData(List<?> data) {
 		this.data = data;
 	}
 
@@ -182,6 +200,12 @@ public class Page<T> {
 	 */
 	public void setPageNums(int pageNums) {
 		this.pageNums = pageNums;
+	}
+
+	@Override
+	public String toString() {
+		return "Page [startIndex=" + startIndex + ", totalCount=" + totalCount + ", pageSize=" + pageSize + ", pageCount=" + pageCount + ", pageNo=" + pageNo + ", pageNums=" + pageNums
+				+ ", startOfPage=" + startOfPage + ", endOfPage=" + endOfPage + ", data=" + data + ", keywords=" + keywords + "]";
 	}
 
 }
