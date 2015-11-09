@@ -5,12 +5,17 @@ package com.zonekey.test.entity;
 
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -27,10 +32,14 @@ public class User implements java.io.Serializable {
 	private String username;
 	private String password;
 	private String email;
+	private String salt;
+	private boolean locked;
 	private String createDate;
 	private Integer createUser;
 	private String modifyDate;
 	private String modifyUser;
+	private boolean rememberMe;
+	private String token;
 	// 多对多关联
 	private Set<Role> roles;
 	private Set<Permission> permissions;
@@ -38,7 +47,6 @@ public class User implements java.io.Serializable {
 	@Id
 	@GenericGenerator(name = "generator", strategy = "increment")
 	@GeneratedValue(generator = "generator")
-	@Column(name = "id", unique = true, nullable = false)
 	public Integer getId() {
 		return id;
 	}
@@ -56,7 +64,7 @@ public class User implements java.io.Serializable {
 		this.name = name;
 	}
 
-	@Column(name = "username", length = 20)
+	@Column(name = "loginname", length = 100)
 	public String getUsername() {
 		return username;
 	}
@@ -65,7 +73,7 @@ public class User implements java.io.Serializable {
 		this.username = username;
 	}
 
-	@Column(name = "password", length = 20)
+	@Column(name = "password", length = 100)
 	public String getPassword() {
 		return password;
 	}
@@ -118,8 +126,22 @@ public class User implements java.io.Serializable {
 	public void setModifyUser(String modifyUser) {
 		this.modifyUser = modifyUser;
 	}
-    
-	@ManyToMany
+
+	/**
+	 * 被控方使用mapredby<br>
+	 * 1）只有OneToOne,OneToMany,ManyToMany上才有mappedBy属性，ManyToOne不存在该属性；<br>
+	 * 2) MappedBy标签一定定义在the owned side(被拥有方)，他指向the owning side(拥有方)；<br>
+	 * 3) MappedBy的含义，应理解为，拥有方能够自动维护跟被拥有方的关系。<br>
+	 * 4）MappedBy跟JoinColumn/JoinTable总是处于互斥的一方。
+	 * 
+	 * 主控方
+	 * 
+	 * @joinColumns 指向自己的外键
+	 * @inverseJoinColumn 指向关联属性的外键
+	 * @return
+	 */
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
 	public Set<Role> getRoles() {
 		return roles;
 	}
@@ -127,8 +149,9 @@ public class User implements java.io.Serializable {
 	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
 	}
-    
-	@ManyToMany
+
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinTable(name = "user_permission", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "permission_id") })
 	public Set<Permission> getPermissions() {
 		return permissions;
 	}
@@ -137,10 +160,61 @@ public class User implements java.io.Serializable {
 		this.permissions = permissions;
 	}
 
+	@Column(name = "salt")
+	public String getSalt() {
+		return salt;
+	}
+
+	public void setSalt(String salt) {
+		this.salt = salt;
+	}
+
+	@Column(name = "locked")
+	public boolean isLocked() {
+		return locked;
+	}
+
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
+
+	/**
+	 * 获取用户登录名和盐值
+	 * 
+	 * @return
+	 */
+	@Transient
+	public String getCredentialsSalt() {
+		return username + salt;
+	}
+
+	@Transient
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	@Transient
+	public boolean isRememberMe() {
+		return rememberMe;
+	}
+
+	public void setRememberMe(boolean rememberMe) {
+		this.rememberMe = rememberMe;
+	}
+
 	@Override
 	public String toString() {
-		return "User [id=" + id + ", name=" + name + ", username=" + username + ", password=" + password + ", email=" + email + ", createDate=" + createDate + ", createUser=" + createUser
-				+ ", modifyDate=" + modifyDate + ", modifyUser=" + modifyUser + "]";
+		return "User [id=" + id + ", name=" + name + ", username=" + username + ", password=" + password + ", email=" + email + ", salt=" + salt + ", locked=" + locked + ", createDate=" + createDate
+				+ ", createUser=" + createUser + ", modifyDate=" + modifyDate + ", modifyUser=" + modifyUser + ", rememberMe=" + rememberMe + ", token=" + token + ", roles=" + roles
+				+ ", permissions=" + permissions + "]";
 	}
 
 }

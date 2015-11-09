@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+	<!-- 配置bean -->
+	<!-- <bean type="com.opensymphony.xwork2.ObjectFactory" name="myfactory" class="com.company.myapp.MyObjectFactory" /> -->
+
+	<!-- 配置拦截器 -->
+	<!-- <interceptors> -->
+	<!-- <interceptor name="security" class="com.company.security.SecurityInterceptor" /> -->
+	<!-- <interceptor-stack name="secureStack"> -->
+	<!-- <interceptor-ref name="security" /> -->
+	<!-- <interceptor-ref name="defaultStack" /> -->
+	<!-- </interceptor-stack> -->
+	<!-- </interceptors> -->
+
+	<!-- 配置常量 -->
+	<!-- 会重新加载配置和文件，影响性能 -->
+	<constant name="struts.devMode" value="true" />
+	<constant name="struts.i18n.reload" value="false" />
+	<constant name="struts.configuration.xml.reload" value="false" />
+	<constant name="struts.freemarker.templatesCache" value="true" />
+	<constant name="struts.freemarker.templatesCache.updateDelay" value="120" />
+	<constant name="struts.freemarker.mru.max.strong.size" value="120" />
+	<!-- 匹配路径参数 -->
+	<constant name="struts.enable.SlashesInActionNames" value="true" />
+	<constant name="struts.mapper.alwaysSelectFullNamespace" value="false" />
+	<constant name="struts.patternMatcher" value="namedVariable" />
+	<!-- 高级正则匹配 -->
+	<!-- <constant name="struts.patternMatcher" value="regex" /> -->
+    
+    <!-- A ActionEventListener can be used to add some logic when action's instance is created or when exception occurred during processing the action. -->
+    <!-- 像这样编写一个监听器public class MyActionEventListener implements ActionEventListener  -->
+    <!-- prepare方法在action实例被创建时调用，handleException在异常发生时调用 -->
+    <bean type="com.opensymphony.xwork2.ActionEventListener" class="com.demo.MyActionEventListener"/>
+
+	<!-- packege:attr(name,extends,namespace,abstact) -->
+	<package name="basicstruts2" extends="struts-default">
+		<!-- 配置拦截器 -->
+		<!-- <default-interceptor-ref name="crudStack" /> -->
+		<action name="index">
+			<result>/index.jsp</result>
+			<!-- 拦截器 -->
+			<!-- <interceptor-ref name="defaultComponentStack"/> -->
+		</action>
+
+		<action name="createaccount" class="com.zonekey.app.actions.AccountAction">
+			<result>/thankyou.jsp</result>
+			<result name="input">/createaccount.jsp</result>
+		</action>
+
+		<!-- 使用通配符 -->
+		<!-- "*"匹配0或多个字符 ,除"/"之外 -->
+		<!-- "**"匹配0或多个字符 ,包括"/" -->
+		<!-- "\character"匹配特殊字符，比如"\\"匹配"\" -->
+		<action name="/edit*" class="org.apache.struts.webapp.example.Edit{1}Action">
+			<result name="failure">/mainMenu.jsp</result>
+			<result>{1}.jsp</result>
+		</action>
+		<action name="List*s" class="actions.List{1}s">
+			<result>list{1}s.jsp</result>
+		</action>
+
+		<!-- result定义 -->
+		<action name="Hello">
+			<result>/hello/Result.jsp</result>
+			<result name="error">/hello/Error.jsp</result>
+			<result name="input">/hello/Input.jsp</result>
+			<result name="*">/hello/Other.jsp</result>
+			<result name="success" type="dispatcher">
+				<param name="location">/ThankYou.jsp</param>
+			</result>
+		</action>
+
+		<!-- 异常处理 -->
+		<action name="DataAccess" class="com.company.DataAccess">
+			<exception-mapping exception="com.company.SecurityException" result="login" />
+			<result name="SQLException" type="chain">SQLExceptionAction</result>
+			<result>/DataAccess.jsp</result>
+		</action>
+	</package>
+
+	<!-- Junit测试配置 -->
+	<constant name="struts.objectFactory" value="spring" />
+	<package name="test" namespace="/test" extends="struts-default">
+		<action name="testAction" class="org.apache.struts2.TestAction">
+			<result type="freemarker">/template.ftl</result>
+		</action>
+	</package>
+	
+	<!-- 拦截器链配置 -->
+	<package name="public" extends="struts-default">
+		<!-- Chain creatAccount to login, using the default parameter -->
+		<action name="createAccount" class="...">
+			<result type="chain">login</result>
+		</action>
+		<action name="login" class="...">
+			<!-- Chain to another namespace -->
+			<result type="chain">
+				<param name="actionName">dashboard</param>
+				<param name="namespace">/secure</param>
+			</result>
+		</action>
+	</package>
+
+	<package name="secure" extends="struts-default" namespace="/secure">
+		<action name="dashboard" class="...">
+			<result>dashboard.jsp</result>
+		</action>
+	</package>
+
+
+	<!-- 全局视图配置 -->
+	<global-results>
+		<result name="error">/Error.jsp</result>
+		<result name="invalid.token">/Error.jsp</result>
+		<result name="login" type="redirectAction">Logon!input</result>
+		<!-- 异常视图 -->
+		<result name="Exception">/Exception.jsp</result>
+	</global-results>
+
+	<!-- 异常映射 -->
+	<global-exception-mappings>
+		<exception-mapping exception="java.sql.SQLException" result="SQLException" />
+		<exception-mapping exception="java.lang.Exception" result="Exception" />
+	</global-exception-mappings>
+
+
+	<!-- 未知处理器 -->
+	<bean type="com.opensymphony.xwork2.UnknownHandler" name="handler1" class="com.opensymphony.xwork2.config.providers.SomeUnknownHandler" />
+	<bean type="com.opensymphony.xwork2.UnknownHandler" name="handler2" class="com.opensymphony.xwork2.config.providers.SomeUnknownHandler" />
+	<unknown-handler-stack>
+		<unknown-handler-ref name="handler1" />
+		<unknown-handler-ref name="handler2" />
+	</unknown-handler-stack>
+
+	<!-- 包含的配置文件 -->
+	<!-- <include file="Home.xml" /> -->
+	<!-- <include file="Hello.xml" /> -->
+	<!-- <include file="Simple.xml" /> -->
+	<!-- <include file="/util/POJO.xml" /> -->
+	<!-- <include file="/com/initech/admin/admin-struts.xml" /> -->
+
+</struts>

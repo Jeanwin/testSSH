@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- !!!!!!!创建多个时，不能重名 -->
+<ehcache name="hibernatecache">
+
+	<!-- 数据缓存存放目录 -->
+	<diskStore path="java.io.tmpdir" />
+
+	<!-- name:指定区域名 -->
+	<!-- maxElementsInMemory ：缓存在内存中的最大数目 -->
+	<!-- maxElementsOnDisk：缓存在磁盘上的最大数目 -->
+	<!-- eternal ：缓存是否持久 -->
+	<!-- overflowToDisk ： 硬盘溢出数目 -->
+	<!-- timeToIdleSeconds ：当缓存条目闲置n秒后销毁 -->
+	<!-- timeToLiveSeconds ：当缓存条目存活n秒后销毁 -->
+	<!-- memoryStoreEvictionPolicy:缓存算法，有LRU（默认）、LFU、FIFO -->
+
+
+
+	<!-- 默认缓存区域，若没有指定缓存区域，使用该区域 -->
+	<defaultCache maxElementsInMemory="100" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+	</defaultCache>
+
+	<!-- 用于查询缓存使用，如果指定了该缓存，那么查询缓存将放在该缓存中 -->
+	<!-- <cache name="org.hibernate.cache.StandardQueryCache" maxElementsInMemory="5" eternal="false" timeToLiveSeconds="120" overflowToDisk="true" /> -->
+	<cache name="org.hibernate.cache.internal.StandardQueryCache" maxElementsInMemory="5" eternal="false" timeToLiveSeconds="120" overflowToDisk="true" />
+
+	<!-- 时间戳缓存，内部使用，用于保存最近更新的表的时间戳，这是非常重要的，无需失效，关闭时间戳缓存区域的过期时间。 -->
+	<!-- <cache name="org.hibernate.cache.UpdateTimestampsCache" maxElementsInMemory="5000" eternal="true" overflowToDisk="true" /> -->
+	<cache name="org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsInMemory="5000" eternal="true" overflowToDisk="true" />
+
+	<!-- 通过类名指定 -->
+	<cache name="com.zonekey.test.entity.Book" maxElementsInMemory="100" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+	</cache>
+
+	<!-- hibernate 二级缓存 -->
+	<cache name="h3test" maxElementsInMemory="100" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+	</cache>
+
+</ehcache>

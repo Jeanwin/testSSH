@@ -1,0 +1,283 @@
+@Entity，注册在类头上，将一个类声明为一个实体bean(即一个持久化POJO类) 。
+@Table，注册在类头上，注解声明了该实体bean映射指定的表（table）。
+@Id用来注册主属性，@GeneratedValue用来注册主属性的生成策略，@Column用来注册属性，@Version用来注册乐观锁，@Transient用来注册不是属性。
+以上的@Id、@GeneratedValue、 @Column 、 @Version，可以用来注册属性，既可以写在Java类的属性上，也可以注册在属性对应的getter上。
+@Transient注册在多余的属性或多余的getter上，但是必须与以上的@Column等对应。
+@Column
+标识属性对应的字段，示例：@Column(name=“userName")
+
+java代码：
+查看复制到剪贴板打印
+@Column(  
+    name="columnName";                                (1)  
+    boolean unique() default false;                   (2)  
+    boolean nullable() default true;                  (3)  
+    boolean insertable() default true;                (4)  
+    boolean updatable() default true;                 (5)  
+    String columnDefinition() default "";             (6)  
+    String table() default "";                        (7)  
+    int length() default 255;                         (8)  
+    int precision() default 0; // decimal precision   (9)  
+    int scale() default 0; // decimal scale           (10)  
+(1) name 可选,列名(默认值是属性名)
+(2) unique 可选,是否在该列上设置唯一约束(默认值false)
+(3) nullable 可选,是否设置该列的值可以为空(默认值false)
+(4) insertable 可选,该列是否作为生成的insert语句中的一个列(默认值true)
+(5) updatable 可选,该列是否作为生成的update语句中的一个列(默认值true)
+(6) columnDefinition 可选: 为这个特定列覆盖SQL DDL片段 (这可能导致无法在不同数据库间移植)
+(7) table 可选,定义对应的表(默认为主表)
+(8) length 可选,列长度(默认值255)
+(8) precision 可选,列十进制精度(decimal precision)(默认值0)
+(10) scale 可选,如果列十进制数值范围(decimal scale)可用,在此设置(默认值0)
+@Id，标识这个属性是实体类的唯一识别的值。
+注意：这个注解只能标注单一列构成的主键，如tbl_grade那种有两个字段组成的联合主键由其他注解标识。
+回忆*.hbm.xml：
+<id name= "uuid">
+<generator class= "assigned"/>
+        </id>
+@Id，只是标识这个属性是主键，但是并没有指出其生成策略，如上例中的assigned就是由程序员指定的生成策略。
+如果仅仅写出@Id，即是使用assigned生成略，如：
+
+java代码：
+查看复制到剪贴板打印
+@Id  
+@Column  
+private int uuid;  
+如果想使用Oracle支持的sequence取主键，必须通过@GeneratedValue来指定生成策略，而由@SequenceGenerator指定如何使用sequence。  
+@Id  
+@Column  
+@GeneratedValue(  
+strategy = GenerationType.SEQUENCE,//使用sequence生成主键  
+generator =“generator“//引用下面名为gernator的生成策略  
+)  
+@SequenceGenerator(  
+name = “generator”,//定义名为generator的生成策略  
+allocationSize = 1，//每次sequence加1  
+name=“seq_a”//引用名为seq_a的sequence  
+)  
+private int uuid;  
+@Version  
+标识这个属性用来映射乐观锁的version
+@Transient
+标识这个属性不用持久化
+@Embeddable【小对象的头上】
+标识实体中可以定义一个嵌入式组件(embedded component)。组件类必须在类一级定义@Embeddable注解。
+@Embedded【大对象的属性头上】
+引用定义的小对象。
+@Embeddable【小对象的头上】
+标识实体中可以定义一个嵌入式组件(embedded component)。组件类必须在类一级定义@Embeddable注解。
+注意：如果这个小对象作为复合主键，一定要实现Serializable接口。这并不是注解决定的，而是Hibernate的主键都需要实现Serializable接口。
+@EmbeddedId 【大对象的属性头上】
+引用定义的小对象作为主键。
+注意：不需要再使用@Id注解。
+  
+标准的1:1
+    
+XML的配置
+
+java代码：
+查看复制到剪贴板打印
+主1【tbl_product】：  
+<one-to-one name="info" cascade="all"/>  
+从1【tbl_product_info】：  
+<id name="uuid">  
+<generator class=“foreign【写死，使用外来生成策略】">  
+<param name=“property”>product【引用自己的Java属性名】 </param>  
+</generator>  
+</id>  
+<one-to-one name="product"/>  
+注解的配置
+
+java代码：
+查看复制到剪贴板打印
+主1【tbl_product】：  
+@OneToOne(cascade=CascadeType.ALL)  
+@PrimaryKeyJoinColumn  
+private ProductInfoModel info;  
+从1【tbl_product_info】：  
+@Id  
+@Column  
+@GeneratedValue(generator=“copy【引用生成策略】")  
+@GenericGenerator(name=“copy【定义生成策略】”,strategy=“foreign【写死，使用外来策略】”,parameters=@Parameter(name=“property”,value=“product【引用自己的Java属性】"))  
+private int uuid;  
+@OneToOne(mappedBy=“info【引用对方的Java属性】")  
+private ProductModel product;  
+   
+标准的1:M
+  
+XML的配置
+
+
+java代码：
+查看复制到剪贴板打印
+1【tbl_parent】：  
+ <set name="children">  
+        <key column=“puuid【对方的数据库外键列名】"/>  
+        <one-to-many class=“cn.javass.model.c.ChildModel【对方的Java类名】"/>  
+  </set>  
+多【tbl_child】：  
+<many-to-one name=“parent” column=“puuid【自己的数据库外键列名】"/>  
+注解的配置
+
+
+java代码：
+查看复制到剪贴板打印
+1【tbl_parent】：  
+@OneToMany  
+@JoinColumn(name="puuid【对方的数据库外键列名】")  
+private Set<ChildModel> children = new HashSet<ChildModel>();  
+多【tbl_child】：  
+@ManyToOne  
+@JoinColumn(name="puuid【自己的数据库外键列名】")  
+private ParentModel parent;  
+   
+标准的1:M
+
+  
+XML的配置
+
+java代码：
+查看复制到剪贴板打印
+<set name=“courses” table=“tbl_grade【联接表】">  
+        <key column=“suuid【联接表里代表自己的数据库字段名】"/>  
+        <many-to-many column=“cuuid【联接表里代表对方的数据库字段名】” class=“cn.javass.model.e.CourseMode【对方的类名】l"/>  
+</set>  
+注解的配置  
+@ManyToMany  
+@JoinTable(  
+name=“tbl_grade【联接表】",  
+joinColumns=@JoinColumn(name="suuid【联接表里代表自己的数据库字段名】"),  
+inverseJoinColumns=@JoinColumn(name="cuuid 【联接表里代表对方的数据库字段名】” )  
+)  
+private Set<CourseModel> courses = new HashSet<CourseModel>();  
+   
+标准的1:M
+
+    
+XML的配置
+
+
+java代码：
+查看复制到剪贴板打印
+主1【tbl_product】：  
+<one-to-one name=“info” foreign-key=“puuid【对方的数据库外键列名】" cascade="all"/>  
+从1【tbl_product_info】：  
+<many-to-one name=“product” column=“puuid【自己的数据库外键列名】” unique=“true【写死】"/>  
+注解的配置
+
+
+java代码：
+查看复制到剪贴板打印
+主1【tbl_product】：  
+@OneToOne(cascade=CascadeType.ALL,mappedBy=“product【对方的Java类属性名 】")  
+private ProductInfoModel info;  
+从1【tbl_product_info】：  
+@OneToOne  
+@JoinColumn(name=“puuid【自己的数据库外键列名】")  
+private ProductModel product;  
+标准的1:M
+ 
+   
+ 
+ 
+XML的配置
+
+java代码：
+查看复制到剪贴板打印
+1【tbl_parent】：  
+<set name=“children” table=“tbl_parent_child【联接表】">  
+        <key column=“puuid【联接表里代表自己的数据库列名】"/>  
+        <many-to-many column=“cuuid【联接表里代表对方的数据库列名】” unique=“true【写死】”  
+class=“cn.javass.model.d.ChildModel【对方的Java类名】"/>  
+        </set>  
+<join table=“tbl_parent_child【联接表】">  
+        <key column="cuuid【联接表里代表自己的数据库列名】"/>  
+        <many-to-one name="parent" column="puuid【联接表里代表对方的数据库列名】" unique="true【写死】"/>  
+</join>  
+注解的配置
+
+java代码：
+查看复制到剪贴板打印
+1【tbl_parent】：  
+@OneToMany(mappedBy="parent【对方的Java类属性名 】")  
+private Set<ChildModel> children = new HashSet<ChildModel>();  
+多【tbl_child】：  
+@ManyToOne  
+@JoinTable(  
+name=“tbl_parent_child【联接表】",  
+joinColumns=@JoinColumn(name="cuuid【联接表里代表自己的数据库字段名】"),  
+inverseJoinColumns=@JoinColumn(name="puuid【联接表里代表对方的数据库字段名】")  
+)  
+private ParentModel parent;  
+ 
+标准的1:M
+ 
+   
+ 
+ 
+XML的配置
+
+java代码：
+查看复制到剪贴板打印
+1【tbl_product】：  
+<join table=“tbl_product_relation【联接表】">  
+        <key column=“puuid【联接表里代表自己的列名】"/>  
+        <many-to-one name=“course【自己的Java属性名】” column=“cuuid【联接表里代表对方的列名】” unique=“true【写死】"/>  
+ </join>  
+注解的配置
+
+java代码：
+查看复制到剪贴板打印
+1【tbl_product】：  
+@ManyToOne  
+@JoinTable(  
+name=" tbl_product_relation 【联接表】",  
+joinColumns=@JoinColumn(name="suuid【联接表里代表自己的列名】"),  
+inverseJoinColumns=@JoinColumn(name="cuuid【联接表里代表对方的列名】",unique=true【写死】)  
+)  
+private CourseModel course;  
+
+//主控方和被控方
+@ManyToMany 注释：表示此类是多对多关系的一边，mappedBy 属性定义了此类为双向关系的维护端，注意：mappedBy 属性的值为此关系的另一端的属性名。
+例如，在Student类中有如下方法：
+被控方:
+            @ManyToMany(fetch = FetchType.LAZY, mappedBy = "students")
+public Set<Teacher> getTeachers() {
+return teachers;
+}
+那么这里的“students”就是Teachers的一个属性，通常应该是这样的：
+Set<Student> students;
+另一端的getStudents方法如下所示：
+ 主控方:
+             @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+@JoinTable(name = "Teacher_Student",
+joinColumns = {@JoinColumn(name = "Teacher_ID", referencedColumnName = "teacherid")},
+inverseJoinColumns = {@JoinColumn(name = "Student_ID", referencedColumnName ="studentid")})
+public Set<Student> getStudents() {
+return students;
+}
+@ManyToMany 注释表示Teacher 是多对多关系的一端。@JoinTable 描述了多对多关系的数据表关系。name 属性指定中间表名称，joinColumns 定义中间表与Teacher 表的外键关系。上面的代码中，中间表Teacher_Student的Teacher_ID 列是Teacher 表的主键列对应的外键列，inverseJoinColumns 属性定义了中间表与另外一端(Student)的外键关系。
+ 
+可以通过上面的定义看到有三个表学生表--老师表--老师学生中间表
+以上提到主控方和被控方。。本人不赞同这种写法：
+理由是： 1.既然是多对多关系。。为什么还要分主动方和被动方？
+              2.为什么需要删除老师后才级联中间表。。。请注意：以上定义方法时，删除学生是无法级联删除中间表的。
+正确的写法应该是两边都用主控方的写法：
+只是joinColumns和inverseJoinColumns属性的地方互换就可以了
+new：（个人观点，，欢迎大家一起来讨论此问题）
+总结：
+个人的定义：
+@ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+@JoinTable(name = "Teacher_Student",
+joinColumns = {@JoinColumn(name = "Student_ID", referencedColumnName = "studentid")},
+inverseJoinColumns = {@JoinColumn(name = "Teacher_ID", referencedColumnName ="teacherid")})
+public Set<Teacher> getTeachers() {
+return teachers;
+}
+@ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+@JoinTable(name = "Teacher_Student",
+joinColumns = {@JoinColumn(name = "Teacher_ID", referencedColumnName = "teacherid")},
+inverseJoinColumns = {@JoinColumn(name = "Student_ID", referencedColumnName ="studentid")})
+public Set<Student> getStudents() {
+return students;
+}

@@ -11,6 +11,7 @@ import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.convention.annotation.Results;
+import org.springframework.stereotype.Controller;
 
 import com.opensymphony.xwork2.ActionSupport;
 import com.zonekey.test.dao.impl.BookDaoImpl;
@@ -22,7 +23,7 @@ import com.zonekey.test.entity.Book;
  * 
  * ParentPackage 继承父包 Namespace命名空间 Results跳转页面 Action访问方法
  */
-
+@Controller
 @ParentPackage("struts-default")
 @Namespace("/book")
 @Results({ @Result(name = "success", location = "/views/main.jsp"), @Result(name = "error", location = "/views/error.jsp") })

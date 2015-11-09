@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jpa="http://www.springframework.org/schema/data/jpa" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd"
+	default-lazy-init="true">
+
+	<!-- <mvc:annotation-driven /> -->
+
+	<!-- 使用annotation 自动注册bean,并保证@Required,@Autowired的属性被注入 -->
+	<context:component-scan base-package="com.zonekey.test" />
+	<!-- <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" /> -->
+	<!-- <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice" /> -->
+
+	<!-- 读入properties配置文件 -->
+	<context:property-placeholder location="classpath:property/jdbc.properties" />
+
+	<!-- 配置数据库C3P0连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${database.driverClassName}" />
+		<!-- jdbc:mysql://127.0.0.1/test?useUnicode=true&amp;characterEncoding=utf-8 -->
+		<property name="jdbcUrl" value="${database.url}" />
+		<property name="user" value="${database.username}" />
+		<property name="password" value="${database.password}" />
+		<!--连接池中保留的最大连接数。默认值: 15 -->
+		<property name="maxPoolSize" value="${c3p0.maxPoolSize}" />
+		<!-- 连接池中保留的最小连接数，默认为：3 -->
+		<property name="minPoolSize" value="${c3p0.minPoolSize}" />
+		<!-- 初始化连接池中的连接数，取值应在minPoolSize与maxPoolSize之间，默认为3 -->
+		<property name="initialPoolSize" value="${c3p0.initialPoolSize}" />
+		<!--最大空闲时间，60秒内未使用则连接被丢弃。若为0则永不丢弃。默认值: 0 -->
+		<property name="maxIdleTime" value="${c3p0.maxIdleTime}" />
+		<!--当连接池中的连接耗尽的时候c3p0一次同时获取的连接数。默认值: 3 -->
+		<property name="acquireIncrement" value="${c3p0.acquireIncrement}" />
+		<!--定义在从数据库获取新连接失败后重复尝试的次数。默认值: 30 ；小于等于0表示无限次 -->
+		<property name="acquireRetryAttempts" value="${c3p0.acquireRetryAttempts}" />
+		<!--重新尝试的时间间隔，默认为：1000毫秒 -->
+		<property name="acquireRetryDelay" value="${c3p0.acquireRetryDelay}" />
+		<!--连接关闭时默认将所有未提交的操作回滚。Default: false -->
+		<property name="autoCommitOnClose" value="${c3p0.autoCommitOnClose}" />
+		<!--如果为false，则获取连接失败将会引起所有等待连接池来获取连接的线程抛出异常，但是数据源仍有效保留，并在下次调用getConnection()的时候继续尝试获取连接。如果设为true，那么在尝试获取连接失败后该数据源将申明已断开并永久关闭。默认: false -->
+		<property name="breakAfterAcquireFailure" value="${c3p0.breakAfterAcquireFailure}" />
+		<property name="preferredTestQuery" value="select 1 from dual" />
+	</bean>
+
+	<!-- 该 BeanPostProcessor 将自动起作用，对标注 @Autowired 的 Bean 进行自动注入 -->
+	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
+
+	<!--定义Hibernate的SessionFactory -->
+	<!-- SessionFactory使用的数据源为上面的数据源 -->
+	<!-- 指定了Hibernate的映射文件和配置信息 -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<!-- 配置datasource数据源 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 配置实体类映射文件 -->
+		<!-- <property name="mappingResources"> <list><value>hbm/user.hbm.xml</value></list> </property> -->
+		<!-- 使用注解映射实体类 -->
+		<!-- <property name="annotatedClasses"> <list> <value>com.zonekey.test.entity.User</value> <value>com.zonekey.test.entity.Book</value> </list> </property> <property name="annotatedPackages"> <list> <value>com.zonekey.test.entity</value> 
+			</list> </property> -->
+		<!-- 只能一个一个配 -->
+
+		<!-- 扫描包下面所有的实体类 -->
+		<property name="packagesToScan">
+			<list>
+				<value>com.zonekey.test.entity</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<map>
+				<entry key="dialect" value="org.hibernate.dialect.MySQL5Dialect" />
+				<entry key="show_sql" value="true" />
+				<entry key="format_sql" value="true" />
+				<entry key="current_session_context_class" value="thread" />
+				<entry key="hibernate.jdbc.batch_size" value="20" />
+			</map>
+			<!-- <props> <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop> <prop key="show_sql">true</prop> <prop key="hibernate.jdbc.batch_size">20</prop> </props> -->
+		</property>
+	</bean>
+
+	<!-- 事务管理配置 -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!-- 使用annotation定义事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+	<!-- REQUIRED：支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。 SUPPORTS：支持当前事务，如果当前没有事务，就以非事务方式执行。 MANDATORY：支持当前事务，如果当前没有事务，就抛出异常。 REQUIRES_NEW：新建事务，如果当前存在事务，把当前事务挂起。 NOT_SUPPORTED：以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。 NEVER：以非事务方式执行，如果当前存在事务，则抛出异常。 
+		NESTED：支持当前事务，如果当前事务存在，则执行一个嵌套事务，如果当前没有事务，就新建一个事务。 -->
+	<!-- <tx:advice id="txAdvice" transaction-manager="transactionManager"> <tx:attributes> <tx:method name="add*" propagation="REQUIRED" /> <tx:method name="delete*" propagation="REQUIRED" /> <tx:method 
+		name="update*" propagation="REQUIRED" /> <tx:method name="save*" propagation="REQUIRED" /> <tx:method name="*" propagation="true" /> </tx:attributes> </tx:advice> -->
+	<!-- 使用aop配置事物 -->
+	<!-- <aop:config> <aop:pointcut id="allManagerMethod" expression="execution(* com.zonekey.test.service.*.*(..))" /> <aop:advisor advice-ref="txAdvice" pointcut-ref="allManagerMethod" /> </aop:config> -->
+
+	<!-- 配置hibernateTemplate -->
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate5.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+</beans>

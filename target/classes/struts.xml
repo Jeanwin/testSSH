@@ -15,7 +15,31 @@
 	<constant name="struts.serve.static.browserCache" value="false" />
 	<!-- 指定由spring负责action对象的创建 -->
 	<constant name="struts.objectFactory" value="spring" />
-	<!-- 是否开启动态方法调用 -->
-	<constant name="struts.enable.DynamicMethodInvocation" value="false" />
 	<!-- 不用注解模式 <package name="book" namespace="/" extends="struts-default"> <action name="login" class="struts2.LoginAction" method="login"> <result name="success">../views/login.jsp</result> </action> </package> -->
+	<!-- 设置在class被修改时是否热加载，发布时要设置为false -->
+	<constant name="struts.convention.classes.reload" value="true" />
+	<!-- 自动动态方法的调用，使用这个设置后可以这样调用：action!method -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="true" />
+	<!-- 指定struts2的地址后缀为.action,.do, -->
+	<constant name="struts.action.extension" value="action,do,," />
+	<!-- 指定jsp文件所在的目录地址 -->
+	<constant name="struts.convention.result.path" value="/WEB-INF/jsps/" />
+	<!-- 使用struts-default默认的转换器，如果是rest的使用：rest-default，rest需要rest的jar插件 -->
+	<!-- <constant name="struts.convention.default.parent.package" value="rest-default" /> -->
+	<!-- 用于配置包名后缀。默认为action、actions、struts -->
+	<!-- <constant name="struts.convention.package.locators" value="controller" /> -->
+	<!-- 用于配置类名后缀，默认为Action，设置后，Struts2只会去找这种后缀名的类做映射 -->
+	<!-- <constant name="struts.convention.action.suffix" value="Controller"/> -->
+	<!-- 设置即使没有@Action注释，依然创建Action映射。默认值是false。因为Convention-Plugin是约定优于配置的风格， 可以不通过注解根据预先的定义就能访问相应Action中的方法 -->
+	<!-- <constant name="struts.convention.action.mapAllMatches" value="true" /> -->
+	<!-- 自定义jsp文件命名的分隔符 -->
+	<constant name="struts.convention.action.name.separator" value="-" />
+	<!-- 国际化资源文件名称 -->
+	<constant name="struts.custom.i18n.resources" value="i18n" />
+	<!-- 是否自动加载国际化资源文件 -->
+	<constant name="struts.i18n.reload" value="true" />
+	<!-- 上传文件大小限制设置 -->
+	<constant name="struts.multipart.maxSize" value="-1" />
+	<!-- 主题，将值设置为simple，即不使用UI模板。这将不会生成额外的html标签 -->
+	<constant name="struts.ui.theme" value="simple" />
 </struts>  

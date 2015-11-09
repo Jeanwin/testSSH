@@ -3,12 +3,13 @@ package com.zonekey.test.entity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.Transient;
-
-import static javax.persistence.GenerationType.IDENTITY;
-
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * @Table(name = "book", catalog = "springtest")指定数据库名称及表名 Book entity. @author
@@ -16,6 +17,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "book")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Book implements java.io.Serializable {
 
 	// Fields
@@ -47,9 +49,11 @@ public class Book implements java.io.Serializable {
 	}
 
 	// Property accessors
+	// @GeneratedValue(strategy = IDENTITY)
 	@Id
-	@GeneratedValue(strategy = IDENTITY)
 	@Column(name = "book_id", unique = true, nullable = false)
+	@GeneratedValue(generator = "increment")
+	@GenericGenerator(name = "increment", strategy = "increment")
 	public Integer getBookId() {
 		return this.bookId;
 	}

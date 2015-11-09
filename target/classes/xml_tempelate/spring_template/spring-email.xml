@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jpa="http://www.springframework.org/schema/data/jpa" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd"
+	default-lazy-init="true">
+	<description>SpringMail配置文件 </description>
+
+	<!-- 邮件发送器 163 -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="${mail.host}" />
+		<property name="username" value="${mail.username}" />
+		<property name="password" value="${mail.password}" />
+		<property name="defaultEncoding" value="UTF-8"></property>
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">${mail.smtp.auth}</prop>
+				<prop key="mail.smtp.timeout">${mail.smtp.timeout}</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 邮件发送器 gmail <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl"> <property name="host" value="${mail.host}" /> <property name="username" value="${mail.username}" /> 
+		<property name="password" value="${mail.password}" /> <property name="defaultEncoding" value="UTF-8"></property> <property name="javaMailProperties"> <props> <prop key="mail.smtp.auth">${mail.smtp.auth}</prop> 
+		<prop key="mail.smtp.timeout">${mail.smtp.timeout}</prop> <prop key="mail.smtp.port">465</prop> <prop key="mail.smtp.socketFactory.port">465</prop> <prop key="mail.smtp.socketFactory.fallback">false</prop> 
+		<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop> </props> </property> </bean> -->
+
+	<!-- 用于生成HTML邮件内容的velocity配置 -->
+	<!-- <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean"> <property name="resourceLoaderPath" value="classpath:velocity" /> <property name="velocityProperties"> 
+		<props> <prop key="resource.loader">file</prop> <prop key="class.resource.loader.class">org.apache.velocity.runtime.resource.loader.FileResourceLoader </prop> <prop key="velocimacro.library" /> <prop key="input.encoding">utf-8</prop> 
+		<prop key="output.encoding">utf-8</prop> <prop key="runtime.log.logsystem.class">org.apache.velocity.runtime.log.NullLogSystem</prop> </props> </property> </bean> -->
+
+	<!-- freeMarker配置 -->
+	<!-- <bean id="freeMarkerConfigurer" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer"> 指定模板的路径 <property name="templateLoaderPath" value="classpath:freeMarker" /> 设置freemarker环境属性 
+		<property name="freemarkerSettings"> <props> 刷新模板的周期 <prop key="template_update_delay">1800</prop> 模板的编码格式 <prop key="default_encoding">UTF-8</prop> 本地化设置 <prop key="locale">zh_CN</prop> </props> </property> 
+		</bean> -->
+</beans>

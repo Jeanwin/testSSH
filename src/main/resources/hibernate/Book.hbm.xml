@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 5.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-5.0.dtd" >
+<hibernate-mapping package="com.zonekey.test.entity">
+	<class name="Book" table="book">
+		<id name="bookId" column="book_id" type="java.lang.Integer">
+			<generator class="identity" />
+		</id>
+		<property name="name" column="name" type="java.lang.String" />
+		<property name="description" column="description" type="java.lang.String" />
+		<!-- 不映射的字段不映射即可 -->
+		<!-- <property name="author" column="author" type="java.lang.String" /> -->
+		<!-- <property name="prise" column="prise" type="java.lang.Float"> -->
+	</class>
+</hibernate-mapping>

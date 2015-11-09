@@ -1,12 +1,19 @@
 package com.zonekey.test.entity;
 
 import java.io.Serializable;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 @Entity
@@ -23,10 +30,11 @@ public class Permission implements Serializable {
 	private Integer createUser;
 	private String modifyDate;
 	private Integer modifyUser;
+	private Set<User> users;
+	private Set<Role> roles;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "id", unique = true, nullable = false)
 	public Integer getId() {
 		return id;
 	}
@@ -96,6 +104,33 @@ public class Permission implements Serializable {
 
 	public void setModifyUser(Integer modifyUser) {
 		this.modifyUser = modifyUser;
+	}
+
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinTable(name = "user_permission", joinColumns = { @JoinColumn(name = "permission_id") }, inverseJoinColumns = { @JoinColumn(name = "id") })
+	@OrderBy("id")
+	public Set<User> getUsers() {
+		return users;
+	}
+
+	public void setUsers(Set<User> users) {
+		this.users = users;
+	}
+
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinTable(name = "role_permission", joinColumns = { @JoinColumn(name = "permission_id") }, inverseJoinColumns = { @JoinColumn(name = "id") })
+	public Set<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
+
+	@Override
+	public String toString() {
+		return "Permission [id=" + id + ", name=" + name + ", description=" + description + ", code=" + code + ", createDate=" + createDate + ", createUser=" + createUser + ", modifyDate="
+				+ modifyDate + ", modifyUser=" + modifyUser + "]";
 	}
 
 }
